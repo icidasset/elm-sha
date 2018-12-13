@@ -60,4 +60,4 @@ combine sizeInBits bitsList =
             )
         |> Maybe.withDefault Binary.empty
         |> Binary.dropLeadingZeros
-        |> Binary.ensureBits 32
+        |> Binary.ensureBits sizeInBits

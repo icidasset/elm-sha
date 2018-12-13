@@ -15,4 +15,4 @@ import SHA
 
 ## TODO / Warning
 
-There's currently a performance penalty when the message is over 600 characters long.
+There's currently a performance penalty when the message is over 600 characters long (for SHA256).
