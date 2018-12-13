@@ -1,6 +1,6 @@
 {
     "type": "package",
-    "name": "icidasset/sha",
+    "name": "icidasset/elm-sha",
     "summary": "SHA cryptographic hash functions.",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
