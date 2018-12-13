@@ -1,6 +1,6 @@
 module SHA exposing (sha224, sha256, sha384, sha512)
 
-{-| An implementation of several [SHA](https://en.wikipedia.org/wiki/Secure_Hash_Algorithms) cryptographic hash functions. Uses [icidasset/elm-binary](https://package.elm-lang.org/packages/icidasset/elm-binary/latest/) underneath and as output, which can be converted to something else.
+{-| An implementation of several [SHA](https://en.wikipedia.org/wiki/Secure_Hash_Algorithms) cryptographic hash functions. This package uses [icidasset/elm-binary](https://package.elm-lang.org/packages/icidasset/elm-binary/latest/), which can easily be converted to something else.
 
 @docs sha224, sha256, sha384, sha512
 
