@@ -2,7 +2,6 @@ module SHA.Internal.SHA256 exposing (chunkSize, compressor, computationSetup, ex
 
 import Array exposing (Array)
 import Binary exposing (Bits)
-import List.Extra as List
 import SHA.Internal.Binary as Binary
 import SHA.Internal.Common
 import SHA.Internal.Computation as Computation

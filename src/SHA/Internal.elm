@@ -2,7 +2,6 @@ module SHA.Internal exposing (compress, compute, computeChunk, extend, extendIni
 
 import Array exposing (Array)
 import Binary exposing (Bits)
-import List.Extra as List
 import SHA.Internal.Binary as Binary
 import SHA.Internal.Common exposing (..)
 import SHA.Internal.Computation as Computation
