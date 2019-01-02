@@ -2,6 +2,7 @@ module SHA.Internal exposing (compress, compute, computeChunk, extend, extendIni
 
 import Array exposing (Array)
 import Binary exposing (Bits)
+import List.Extra as List
 import SHA.Internal.Binary as Binary
 import SHA.Internal.Common exposing (..)
 import SHA.Internal.Computation as Computation
@@ -56,7 +57,7 @@ preprocess : { blockLength : Int } -> String -> Bits
 preprocess { blockLength } message =
     let
         m =
-            Binary.fromString message
+            Binary.fromUtf8String message
 
         -- Length of the message in bits
         l =
@@ -82,7 +83,7 @@ preprocess { blockLength } message =
     -- Append l as a x-bit big-endian integer
     , l
         |> Binary.fromDecimal
-        |> Binary.ensureBits (blockLength // 8)
+        |> Binary.ensureSize (blockLength // 8)
     ]
         |> Binary.concat
 
@@ -91,27 +92,69 @@ preprocess { blockLength } message =
 -- COMPUTATION
 
 
+type alias ChunkComputer =
+    { currentChunk : Int
+    , totalChunks : Int
+
+    --
+    , scheduleExtRange : List Int
+    , scheduleExtArray : Array Bits
+    }
+
+
 {-| Break padded-message in chunks,
 and then process each chunk.
 -}
 compute : Computation.Setup -> Bits -> HashTable
 compute setup bits =
-    bits
-        |> Binary.chunksOf setup.chunkSize
-        |> List.foldl (computeChunk setup) setup.initialHashTable
+    let
+        scheduleSize =
+            Array.length setup.roundConstants - 1
+
+        chunkComputer =
+            { currentChunk = 1
+            , totalChunks = ceiling (toFloat (Binary.width bits) / toFloat setup.chunkSize)
+
+            --
+            , scheduleExtRange = List.range 16 scheduleSize
+            , scheduleExtArray = Array.repeat (scheduleSize - 15) Binary.empty
+            }
+    in
+    computeChunk
+        setup
+        chunkComputer
+        (bits
+            |> Binary.toBooleans
+            |> List.greedyGroupsOf (setup.chunkSize // 16)
+            |> Array.fromList
+            |> Array.map Binary.fromBooleans
+        )
+        setup.initialHashTable
 
 
 {-| Break each chunk in words (ie. smaller chunks),
 and then go through the different computation steps.
 -}
-computeChunk : Computation.Setup -> Bits -> HashTable -> HashTable
-computeChunk setup bits hashTable =
-    bits
-        |> Binary.chunksOf (setup.chunkSize // 16)
-        |> Array.fromList
-        |> extendInitialSchedule setup
-        |> Array.toIndexedList
-        |> compress setup hashTable
+computeChunk : Computation.Setup -> ChunkComputer -> Array Bits -> HashTable -> HashTable
+computeChunk setup chunkComputer pieces hashTable =
+    let
+        newHashTable =
+            pieces
+                |> Array.slice
+                    (max 0 <| (chunkComputer.currentChunk - 1) * 16)
+                    (chunkComputer.currentChunk * 16)
+                |> extendInitialSchedule setup chunkComputer
+                |> compress setup hashTable
+    in
+    if chunkComputer.currentChunk < chunkComputer.totalChunks then
+        computeChunk
+            setup
+            { chunkComputer | currentChunk = chunkComputer.currentChunk + 1 }
+            pieces
+            newHashTable
+
+    else
+        newHashTable
 
 
 
@@ -121,24 +164,18 @@ computeChunk setup bits hashTable =
 {-| Build a fully-sized message-schedule,
 based on a given initial schedule.
 -}
-extendInitialSchedule : Computation.Setup -> Array Bits -> Array Bits
-extendInitialSchedule setup initialSchedule =
+extendInitialSchedule : Computation.Setup -> ChunkComputer -> Array Bits -> Array Bits
+extendInitialSchedule setup chunkComputer initialSchedule =
     let
-        scheduleSize =
-            Array.length setup.roundConstants - 1
-
         lengthySchedule =
             Array.append
                 initialSchedule
-                (Array.repeat (scheduleSize - 15) Binary.empty)
+                chunkComputer.scheduleExtArray
     in
-    Array.foldl
+    List.foldl
         (extend setup)
         lengthySchedule
-        (scheduleSize
-            |> List.range 16
-            |> Array.fromList
-        )
+        chunkComputer.scheduleExtRange
 
 
 extend : Computation.Setup -> Int -> Array Bits -> Array Bits
@@ -163,9 +200,10 @@ type alias Compressor =
 
 {-| Take a set of hash values and run the compression function on it.
 -}
-compress : Computation.Setup -> HashTable -> List ( Int, Bits ) -> HashTable
+compress : Computation.Setup -> HashTable -> Array Bits -> HashTable
 compress setup hashTable schedule =
     schedule
+        |> Array.toIndexedList
         |> List.foldl (useCompressor setup.compressor) hashTable
         |> combineHashTables (setup.chunkSize // 16) hashTable
 

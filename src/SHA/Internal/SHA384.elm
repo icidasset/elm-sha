@@ -1,6 +1,6 @@
 module SHA.Internal.SHA384 exposing (computationSetup, initialHashTable)
 
-import Binary exposing (Bits)
+import Binary
 import SHA.Internal.Computation as Computation
 import SHA.Internal.HashTable exposing (HashTable)
 import SHA.Internal.SHA512

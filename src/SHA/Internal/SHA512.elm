@@ -29,7 +29,7 @@ computationSetup =
     }
 
 
-combine : List Bits -> Bits
+combine : Bits -> Bits -> Bits
 combine =
     SHA.Internal.Common.combine (chunkSize // 16)
 
@@ -51,7 +51,10 @@ extender { i2, i7, i15, i16 } =
                 |> Binary.xor (Binary.rotateRightBy 61 i2)
                 |> Binary.xor (Binary.rotateRightBy 19 i2)
     in
-    combine [ i16, a, i7, b ]
+    b
+        |> combine i7
+        |> combine a
+        |> combine i16
 
 
 
@@ -61,43 +64,44 @@ extender { i2, i7, i15, i16 } =
 compressor : { index : Int, scheduleNumber : Bits } -> HashTable -> HashTable
 compressor { index, scheduleNumber } hashTable =
     let
+        -- X
+        x1 =
+            Binary.rotateRightBy 41 hashTable.e
+                |> Binary.xor (Binary.rotateRightBy 18 hashTable.e)
+                |> Binary.xor (Binary.rotateRightBy 14 hashTable.e)
+
+        x2 =
+            Binary.xor
+                (Binary.and hashTable.e hashTable.f)
+                (Binary.and (Binary.not hashTable.e) hashTable.g)
+
         x =
-            combine
-                [ hashTable.h
+            scheduleNumber
+                |> combine (Maybe.withDefault Binary.empty (Array.get index roundConstants))
+                |> combine x2
+                |> combine x1
+                |> combine hashTable.h
 
-                --
-                , Binary.rotateRightBy 41 hashTable.e
-                    |> Binary.xor (Binary.rotateRightBy 18 hashTable.e)
-                    |> Binary.xor (Binary.rotateRightBy 14 hashTable.e)
+        -- Y
+        y1 =
+            Binary.rotateRightBy 39 hashTable.a
+                |> Binary.xor (Binary.rotateRightBy 34 hashTable.a)
+                |> Binary.xor (Binary.rotateRightBy 28 hashTable.a)
 
-                --
-                , Binary.xor
-                    (Binary.and hashTable.e hashTable.f)
-                    (Binary.and (Binary.not hashTable.e) hashTable.g)
-
-                --
-                , Maybe.withDefault Binary.empty (Array.get index roundConstants)
-                , scheduleNumber
-                ]
+        y2 =
+            hashTable.c
+                |> Binary.and hashTable.b
+                |> Binary.xor (Binary.and hashTable.a hashTable.c)
+                |> Binary.xor (Binary.and hashTable.a hashTable.b)
 
         y =
-            combine
-                [ Binary.rotateRightBy 39 hashTable.a
-                    |> Binary.xor (Binary.rotateRightBy 34 hashTable.a)
-                    |> Binary.xor (Binary.rotateRightBy 28 hashTable.a)
-
-                --
-                , hashTable.c
-                    |> Binary.and hashTable.b
-                    |> Binary.xor (Binary.and hashTable.a hashTable.c)
-                    |> Binary.xor (Binary.and hashTable.a hashTable.b)
-                ]
+            combine y1 y2
     in
-    { a = combine [ x, y ]
+    { a = combine x y
     , b = hashTable.a
     , c = hashTable.b
     , d = hashTable.c
-    , e = combine [ hashTable.d, x ]
+    , e = combine hashTable.d x
     , f = hashTable.e
     , g = hashTable.f
     , h = hashTable.g

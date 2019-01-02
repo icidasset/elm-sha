@@ -23,14 +23,14 @@ type alias HashTable =
 
 combineHashTables : Int -> HashTable -> HashTable -> HashTable
 combineHashTables sizeInBits x y =
-    { a = combine sizeInBits [ x.a, y.a ]
-    , b = combine sizeInBits [ x.b, y.b ]
-    , c = combine sizeInBits [ x.c, y.c ]
-    , d = combine sizeInBits [ x.d, y.d ]
-    , e = combine sizeInBits [ x.e, y.e ]
-    , f = combine sizeInBits [ x.f, y.f ]
-    , g = combine sizeInBits [ x.g, y.g ]
-    , h = combine sizeInBits [ x.h, y.h ]
+    { a = combine sizeInBits x.a y.a
+    , b = combine sizeInBits x.b y.b
+    , c = combine sizeInBits x.c y.c
+    , d = combine sizeInBits x.d y.d
+    , e = combine sizeInBits x.e y.e
+    , f = combine sizeInBits x.f y.f
+    , g = combine sizeInBits x.g y.g
+    , h = combine sizeInBits x.h y.h
     }
 
 

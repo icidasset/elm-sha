@@ -18,8 +18,3 @@ import SHA
 ..>   |> Binary.toHex
 "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD"
 ```
-
-
-## TODO / Warning
-
-There's currently a performance penalty when the message is over 600 characters long (for SHA256).

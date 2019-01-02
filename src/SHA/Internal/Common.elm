@@ -1,8 +1,6 @@
 module SHA.Internal.Common exposing (combine)
 
 import Binary exposing (Bits)
-import List.Extra as List
-import SHA.Internal.Binary as Binary
 
 
 
@@ -19,45 +17,54 @@ import SHA.Internal.Binary as Binary
     >>> smaller     = Binary.fromDecimal (2 ^ 32 - 1)
     >>> max         = Binary.fromDecimal (2 ^ 32)
     >>> larger      = Binary.fromDecimal (2 ^ 32 + 1)
-    >>> zero        = Binary.fromBooleans []
+    >>> zero        = Binary.empty
     >>> one         = Binary.fromDecimal 1
     >>> two         = Binary.fromDecimal 2
+    >>> fifteen     = Binary.fromDecimal 15
 
-    >>> Binary.dropLeadingZeros <| combine 32 [ smaller ]
+    >>> Binary.dropLeadingZeros <| combine 32 smaller zero
     smaller
 
-    >>> Binary.dropLeadingZeros <| combine 32 [ smaller, one ]
+    >>> Binary.dropLeadingZeros <| combine 32 smaller one
     zero
 
-    >>> Binary.dropLeadingZeros <| combine 32 [ max ]
+    >>> Binary.dropLeadingZeros <| combine 32 max zero
     zero
 
-    >>> Binary.dropLeadingZeros <| combine 32 [ larger ]
+    >>> Binary.dropLeadingZeros <| combine 32 larger zero
     one
 
-    >>> Binary.dropLeadingZeros <| combine 32 [ larger, one ]
+    >>> Binary.dropLeadingZeros <| combine 32 larger one
     two
 
--}
-combine : Int -> List Bits -> Bits
-combine sizeInBits bitsList =
-    bitsList
-        |> List.foldl1
-            (\x y ->
-                let
-                    sum =
-                        Binary.add x y
-                in
-                if List.length (Binary.toBooleans sum) > sizeInBits then
-                    -- Is the sum larger than the modulo constant (ie. 2 ^ sizeInBits)?
-                    Binary.subtract
-                        sum
-                        (Binary.fromBooleans (True :: List.repeat sizeInBits False))
+    >>> combine 4 (Binary.fromDecimal (2 ^ 16)) fifteen
+    fifteen
 
-                else
-                    -- If not, carry on.
-                    sum
-            )
-        |> Maybe.withDefault Binary.empty
-        |> Binary.dropLeadingZeros
-        |> Binary.ensureBits sizeInBits
+    >>> combine 4 fifteen (Binary.fromDecimal (2 ^ 16))
+    fifteen
+
+-}
+combine : Int -> Bits -> Bits -> Bits
+combine sizeInBits x y =
+    let
+        sum =
+            Binary.dropLeadingZeros (Binary.add x y)
+
+        width =
+            Binary.width sum
+    in
+    if width > sizeInBits then
+        let
+            excess =
+                width - sizeInBits
+        in
+        -- Is the sum larger than the modulo constant (ie. 2 ^ sizeInBits)?
+        (True :: List.repeat (sizeInBits + excess - 1) False)
+            |> Binary.fromBooleans
+            |> Binary.subtract sum
+            |> Binary.dropLeadingZeros
+            |> Binary.ensureSize sizeInBits
+
+    else
+        -- If not, carry on.
+        Binary.ensureSize sizeInBits sum
