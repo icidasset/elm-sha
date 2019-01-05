@@ -24,21 +24,25 @@ import SHA.Internal.HashTable exposing (..)
     ### SHA-256
 
     >>> ""
+    ..>   |> Binary.fromStringAsUtf8
     ..>   |> preprocess { blockLength = 512 }
     ..>   |> Binary.width
     512
 
     >>> "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+    ..>   |> Binary.fromStringAsUtf8
     ..>   |> preprocess { blockLength = 512 }
     ..>   |> Binary.width
     1024
 
     >>> "abc"
+    ..>   |> Binary.fromStringAsUtf8
     ..>   |> preprocess { blockLength = 512 }
     ..>   |> Binary.toHex
     "61626380000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018"
 
     >>> "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq"
+    ..>   |> Binary.fromStringAsUtf8
     ..>   |> preprocess { blockLength = 512 }
     ..>   |> Binary.toHex
     "6162636462636465636465666465666765666768666768696768696A68696A6B696A6B6C6A6B6C6D6B6C6D6E6C6D6E6F6D6E6F706E6F70718000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001C0"
@@ -47,20 +51,18 @@ import SHA.Internal.HashTable exposing (..)
     ### SHA-512
 
     >>> "abc"
+    ..>   |> Binary.fromStringAsUtf8
     ..>   |> preprocess { blockLength = 1024 }
     ..>   |> Binary.toHex
     "6162638000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018"
 
 -}
-preprocess : { blockLength : Int } -> String -> Bits
+preprocess : { blockLength : Int } -> Bits -> Bits
 preprocess { blockLength } message =
     let
-        m =
-            Binary.fromStringAsUtf8 message
-
         -- Length of the message in bits
         l =
-            Binary.width m
+            Binary.width message
 
         -- (k + l + 1 + 64) is a multiple of `blockLength`
         --
@@ -69,7 +71,7 @@ preprocess { blockLength } message =
         k =
             blockLength - modBy blockLength (l + 1 + blockLength // 8)
     in
-    [ m
+    [ message
 
     -- Append a single 1 bit (represented as a single byte)
     , Binary.fromBooleans [ True ]
