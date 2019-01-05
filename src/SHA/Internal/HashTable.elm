@@ -1,7 +1,6 @@
 module SHA.Internal.HashTable exposing (HashTable, combineHashTables, hashTableToBits, partialHashTableToBits)
 
 import Binary exposing (Bits)
-import SHA.Internal.Binary exposing (..)
 import SHA.Internal.Common exposing (combine)
 
 

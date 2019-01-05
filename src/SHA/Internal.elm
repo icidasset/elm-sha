@@ -3,7 +3,6 @@ module SHA.Internal exposing (compress, compute, computeChunk, extend, extendIni
 import Array exposing (Array)
 import Binary exposing (Bits)
 import List.Extra as List
-import SHA.Internal.Binary as Binary
 import SHA.Internal.Common exposing (..)
 import SHA.Internal.Computation as Computation
 import SHA.Internal.HashTable exposing (..)
@@ -57,7 +56,7 @@ preprocess : { blockLength : Int } -> String -> Bits
 preprocess { blockLength } message =
     let
         m =
-            Binary.fromUtf8String message
+            Binary.fromStringAsUtf8 message
 
         -- Length of the message in bits
         l =
