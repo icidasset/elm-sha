@@ -1,6 +1,11 @@
 # Changelog
 
 
+#### 2.0.1
+
+Major performance improvements.
+
+
 #### 2.0.0
 
 The hash functions now take `Binary.Bits` instead of `String`s.

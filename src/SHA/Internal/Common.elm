@@ -59,9 +59,10 @@ combine sizeInBits x y =
                 width - sizeInBits
         in
         -- Is the sum larger than the modulo constant (ie. 2 ^ sizeInBits)?
-        (True :: List.repeat (sizeInBits + excess - 1) False)
+        sum
+            |> Binary.toBooleans
+            |> List.drop excess
             |> Binary.fromBooleans
-            |> Binary.subtract sum
             |> Binary.dropLeadingZeros
             |> Binary.ensureSize sizeInBits
 
