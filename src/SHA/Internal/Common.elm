@@ -48,24 +48,18 @@ combine : Int -> Bits -> Bits -> Bits
 combine sizeInBits x y =
     let
         sum =
-            Binary.dropLeadingZeros (Binary.add x y)
+            Binary.add x y
 
         width =
             Binary.width sum
     in
     if width > sizeInBits then
-        let
-            excess =
-                width - sizeInBits
-        in
         -- Is the sum larger than the modulo constant (ie. 2 ^ sizeInBits)?
         sum
             |> Binary.toBooleans
-            |> List.drop excess
+            |> List.drop (width - sizeInBits)
             |> Binary.fromBooleans
-            |> Binary.dropLeadingZeros
-            |> Binary.ensureSize sizeInBits
 
     else
         -- If not, carry on.
-        Binary.ensureSize sizeInBits sum
+        sum

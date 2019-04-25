@@ -1,6 +1,11 @@
 # Changelog
 
 
+#### 2.0.2
+
+Another performance bump.
+
+
 #### 2.0.1
 
 Major performance improvements.

@@ -3,7 +3,7 @@
     "name": "icidasset/elm-sha",
     "summary": "SHA cryptographic hash functions.",
     "license": "MIT",
-    "version": "2.0.1",
+    "version": "2.0.2",
     "exposed-modules": [
         "SHA"
     ],
